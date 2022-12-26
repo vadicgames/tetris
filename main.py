@@ -35,20 +35,27 @@ class Board:
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
                 pygame.draw.rect(screen, (255, 255, 255),
-                                 (self.left + self.cell_size * i + 1,
-                                  self.top + self.cell_size * j + 1,
-                                  self.cell_size - 2, self.cell_size - 2), self.board[i][j])
+                                 (self.left + self.cell_size * i,
+                                  self.top + self.cell_size * j,
+                                  self.cell_size, self.cell_size), 1)
 
 
 class Shape(pygame.sprite.Sprite):
-    def __init__(self, shape_type, left, top, x, y):
-        pass
+    def __init__(self, group, shape_type, left, top, x, y):
+        super().__init__(group)
+        self.top, self.left, self.x, self.y, self.shape_type = top, left, x, y, shape_type
+        self.image = load_image("shape" + str(shape_type))
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
 
 
+    def update(self, ):
+        self.image = pygame.transform.rotate(self.image, 90)
 
 
 if __name__ == '__main__':
     board = Board(width, height)
+    shapes = pygame.sprite.Group()
     running = True
     game = False
     while running:
