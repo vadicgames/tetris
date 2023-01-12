@@ -3,6 +3,10 @@ import os
 import sys
 
 FPS = 50
+running = True
+game = False
+drop_timer = 0
+new_shape = True
 pygame.init()
 size = width, height = 290, 290
 screen = pygame.display.set_mode(size)
@@ -22,7 +26,7 @@ def load_image(name, colorkey=None):
     if colorkey is not None:
         image = image.convert()
         if colorkey == -1:
-            colorkey = image.get_at((0, 0))
+            colorkey = (255, 255, 255)
         image.set_colorkey(colorkey)
     else:
         image = image.convert_alpha()
@@ -74,48 +78,80 @@ class Shape(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
         self.anchored = False
+        self.ns, self.dt = False, 1
 
     def update(self, ev):
         if not self.anchored:
-            if ev.key == pygame.K_UP:
-                x, y = self.rect.x, self.rect.y
-                self.image = pygame.transform.rotate(self.image, 90)
-                if pygame.sprite.spritecollideany(self, all_sprites):
-                    self.image = pygame.transform.rotate(self.image, 270)
-                self.rect = self.image.get_rect()
-                self.rect.x, self.rect.y = x, y
-            if ev.key == pygame.K_LEFT:
-                self.rect.x -= 30
-                if pygame.sprite.spritecollideany(self, all_sprites):
-                    self.rect.x += 30
-            if ev.key == pygame.K_RIGHT:
-                self.rect.x += 30
-                if pygame.sprite.spritecollideany(self, all_sprites):
+            if ev != 'drop':
+                if ev.key == pygame.K_w:
+                    print("W")
+                    rect = self.rect
+                    self.image = pygame.transform.rotate(self.image, 90)
+                    self.rect = self.image.get_rect()
+                    self.rect.x, self.rect.y = rect.x, rect.y
+                    if pygame.sprite.spritecollideany(self, all_sprites):
+                        self.image = pygame.transform.rotate(self.image, 270)
+                    self.rect = self.image.get_rect()
+                    self.rect.x, self.rect.y = rect.x, rect.y
+                if ev.key == pygame.K_a:
+                    print("A")
                     self.rect.x -= 30
-            if ev.key == pygame.K_DOWN:
+                    if pygame.sprite.spritecollideany(self, all_sprites):
+                        self.rect.x += 30
+                if ev.key == pygame.K_d:
+                    print("D")
+                    self.rect.x += 30
+                    if pygame.sprite.spritecollideany(self, all_sprites):
+                        self.rect.x -= 30
+                if ev.key == pygame.K_s:
+                    print("S")
+                    self.dt = 0
+                    self.rect.y += 30
+                    if pygame.sprite.spritecollideany(self, all_sprites):
+                        self.rect.y -= 30
+                        self.add(all_sprites)
+                        print("anchored")
+                        self.ns = True
+                        self.anchored = True
+            else:
                 self.rect.y += 30
                 if pygame.sprite.spritecollideany(self, all_sprites):
+                    self.rect.y -= 30
                     self.add(all_sprites)
+                    print("anchored")
+                    self.ns = True
                     self.anchored = True
+
 
 
 if __name__ == '__main__':
     Border(9, 9, width - 9, 9)
-    Border(9, height - 11, width - 9, height - 11)
+    Border(9, height - 9, width - 9, height - 9)
     Border(9, 9, 9, height - 9)
     Border(width - 9, 9, width - 9, height - 9)
     board = Board(width, height)
-    running = True
-    game = False
-    s = Shape(shapes, 1, 10, 10, 70, 40)
     while running:
+        drop_timer += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
                 shapes.update(event)
+        if drop_timer >= 50:
+            shapes.update('drop')
+            drop_timer = 0
+        if new_shape:
+            s = Shape(shapes, 1, 10, 10, 70, 40)
+            new_shape = False
+        if s.dt == 0:
+            drop_timer = 0
+            s.dt = 1
+        if s.ns:
+            new_shape = True
+            s.ns = False
         screen.fill((0, 0, 0))
         board.render(screen)
         shapes.draw(screen)
         pygame.display.flip()
+        clock.tick(FPS)
     pygame.quit()
