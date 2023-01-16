@@ -34,14 +34,13 @@ def load_image(name, colorkey=None):
 
 
 class Border(pygame.sprite.Sprite):
-    # строго вертикальный или строго горизонтальный отрезок
     def __init__(self, x1, y1, x2, y2):
         super().__init__(all_sprites)
-        if x1 == x2:  # вертикальная стенка
+        if x1 == x2:
             self.add(vertical_borders)
             self.image = pygame.Surface([1, y2 - y1])
             self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:  # горизонтальная стенка
+        else:
             self.add(horizontal_borders)
             self.image = pygame.Surface([x2 - x1, 1])
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
@@ -79,8 +78,16 @@ class Shape(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = x, y
         self.anchored = False
         self.ns, self.dt = False, 1
+        self.changes = ''
+        self.mask = pygame.mask.from_surface(self.image)
+        for sprite in all_sprites.spritedict.keys():
+            if pygame.sprite.collide_mask(self, sprite):
+                print("end")
+                self.anchored = True
+
 
     def update(self, ev):
+        self.changes = ''
         if not self.anchored:
             if ev != 'drop':
                 if ev.key == pygame.K_w:
@@ -89,39 +96,43 @@ class Shape(pygame.sprite.Sprite):
                     self.image = pygame.transform.rotate(self.image, 90)
                     self.rect = self.image.get_rect()
                     self.rect.x, self.rect.y = rect.x, rect.y
-                    if pygame.sprite.spritecollideany(self, all_sprites):
-                        self.image = pygame.transform.rotate(self.image, 270)
-                    self.rect = self.image.get_rect()
-                    self.rect.x, self.rect.y = rect.x, rect.y
+                    self.changes = 'rot'
                 if ev.key == pygame.K_a:
                     print("A")
                     self.rect.x -= 30
-                    if pygame.sprite.spritecollideany(self, all_sprites):
-                        self.rect.x += 30
+                    self.changes = 'l'
                 if ev.key == pygame.K_d:
                     print("D")
                     self.rect.x += 30
-                    if pygame.sprite.spritecollideany(self, all_sprites):
-                        self.rect.x -= 30
+                    self.changes = 'r'
                 if ev.key == pygame.K_s:
                     print("S")
                     self.dt = 0
-                    self.rect.y += 30
-                    if pygame.sprite.spritecollideany(self, all_sprites):
-                        self.rect.y -= 30
-                        self.add(all_sprites)
+                    self.rect.y += 15
+                    self.changes = 'd'
+                self.mask = pygame.mask.from_surface(self.image)
+            else:
+                self.rect.y += 15
+                self.changes = "d"
+            for sprite in all_sprites.spritedict.keys():
+                if pygame.sprite.collide_mask(self, sprite):
+                    if self.changes == 'rot':
+                        rect = self.rect
+                        self.image = pygame.transform.rotate(self.image, 270)
+                        self.rect = self.image.get_rect()
+                        self.rect.x, self.rect.y = rect.x, rect.y
+                        self.mask = pygame.mask.from_surface(self.image)
+                    if self.changes == 'l':
+                        self.rect.x += 30
+                    if self.changes == 'r':
+                        self.rect.x -= 30
+                    if self.changes == 'd':
+                        self.rect.y -= 15
                         print("anchored")
                         self.ns = True
                         self.anchored = True
-            else:
-                self.rect.y += 30
-                if pygame.sprite.spritecollideany(self, all_sprites):
-                    self.rect.y -= 30
-                    self.add(all_sprites)
-                    print("anchored")
-                    self.ns = True
-                    self.anchored = True
-
+            if self.anchored:
+                self.add(all_sprites)
 
 
 if __name__ == '__main__':
