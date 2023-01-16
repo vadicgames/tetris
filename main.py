@@ -83,7 +83,7 @@ class Shape(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         for sprite in all_sprites.spritedict.keys():
             if pygame.sprite.collide_mask(self, sprite):
-                print("end")
+                print("Конец Игры")
                 self.anchored = True
 
 
@@ -92,22 +92,18 @@ class Shape(pygame.sprite.Sprite):
         if not self.anchored:
             if ev != 'drop':
                 if ev.key == pygame.K_w:
-                    print("W")
                     rect = self.rect
                     self.image = pygame.transform.rotate(self.image, 90)
                     self.rect = self.image.get_rect()
                     self.rect.x, self.rect.y = rect.x, rect.y
                     self.changes = 'rot'
                 if ev.key == pygame.K_a:
-                    print("A")
                     self.rect.x -= 30
                     self.changes = 'l'
                 if ev.key == pygame.K_d:
-                    print("D")
                     self.rect.x += 30
                     self.changes = 'r'
                 if ev.key == pygame.K_s:
-                    print("S")
                     self.dt = 0
                     self.rect.y += 30
                     self.changes = 'd'
@@ -129,7 +125,6 @@ class Shape(pygame.sprite.Sprite):
                         self.rect.x -= 30
                     if self.changes == 'd':
                         self.rect.y -= 30
-                        print("anchored")
                         self.ns = True
                         self.anchored = True
             if self.anchored:
@@ -153,7 +148,7 @@ if __name__ == '__main__':
             shapes.update('drop')
             drop_timer = 0
         if new_shape:
-            s = Shape(shapes, randint(1, 4), 10, 10, 70, 40)
+            s = Shape(shapes, randint(1, 7), 10, 10, 70, 40)
             new_shape = False
         if s.dt == 0:
             drop_timer = 0
