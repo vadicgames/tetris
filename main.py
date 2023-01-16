@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+from random import randint
 
 FPS = 50
 running = True
@@ -8,7 +9,7 @@ game = False
 drop_timer = 0
 new_shape = True
 pygame.init()
-size = width, height = 290, 290
+size = width, height = 290, 380
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 horizontal_borders = pygame.sprite.Group()
@@ -108,11 +109,11 @@ class Shape(pygame.sprite.Sprite):
                 if ev.key == pygame.K_s:
                     print("S")
                     self.dt = 0
-                    self.rect.y += 15
+                    self.rect.y += 30
                     self.changes = 'd'
                 self.mask = pygame.mask.from_surface(self.image)
             else:
-                self.rect.y += 15
+                self.rect.y += 30
                 self.changes = "d"
             for sprite in all_sprites.spritedict.keys():
                 if pygame.sprite.collide_mask(self, sprite):
@@ -127,7 +128,7 @@ class Shape(pygame.sprite.Sprite):
                     if self.changes == 'r':
                         self.rect.x -= 30
                     if self.changes == 'd':
-                        self.rect.y -= 15
+                        self.rect.y -= 30
                         print("anchored")
                         self.ns = True
                         self.anchored = True
@@ -152,7 +153,7 @@ if __name__ == '__main__':
             shapes.update('drop')
             drop_timer = 0
         if new_shape:
-            s = Shape(shapes, 1, 10, 10, 70, 40)
+            s = Shape(shapes, randint(1, 4), 10, 10, 70, 40)
             new_shape = False
         if s.dt == 0:
             drop_timer = 0
