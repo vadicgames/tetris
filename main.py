@@ -8,6 +8,10 @@ running = True
 game = False
 drop_timer = 0
 new_shape = True
+lineCount = 0
+end, exited = False, False
+a = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+lines_board = [a[:], a[:], a[:], a[:], a[:], a[:], a[:], a[:], a[:], a[:], a[:], a[:]]
 pygame.init()
 size = width, height = 290, 380
 screen = pygame.display.set_mode(size)
@@ -77,14 +81,14 @@ class Shape(pygame.sprite.Sprite):
         self.image = load_image("shape" + str(shape_type) + ".png", colorkey=-1)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
-        self.anchored = False
+        self.anchored, self.end = False, False
         self.ns, self.dt = False, 1
         self.changes = ''
         self.mask = pygame.mask.from_surface(self.image)
         for sprite in all_sprites.spritedict.keys():
             if pygame.sprite.collide_mask(self, sprite):
                 print("Конец Игры")
-                self.anchored = True
+                self.anchored, self.end = True, True
 
 
     def update(self, ev):
@@ -131,14 +135,45 @@ class Shape(pygame.sprite.Sprite):
                 self.add(all_sprites)
 
 
+class Checker(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = pygame.Surface([28, 28])
+        self.image.fill(pygame.Color("red"))
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 291, 381
+        self.mask = pygame.mask.from_surface(self.image)
+    def checkTile(self, x, y):
+        self.rect.x, self.rect.y = x + 1, y + 1
+        coll = False
+        for sprite in shapes.spritedict.keys():
+            if pygame.sprite.collide_mask(self, sprite):
+                coll = True
+        return coll
+
+
 if __name__ == '__main__':
     Border(9, 9, width - 9, 9)
     Border(9, height - 9, width - 9, height - 9)
     Border(9, 9, 9, height - 9)
     Border(width - 9, 9, width - 9, height - 9)
     board = Board(width, height)
+    check = Checker()
     while running:
         drop_timer += 1
+        if new_shape:
+            for x in range(9):
+                for y in range(12):
+                    if check.checkTile((x * 30) + 10, (y * 30) + 10):
+                        lines_board[y][x] = 1
+            check.checkTile(290, 380)
+            for i in lines_board:
+                print(i)
+            print('----------------------------')
+            s = Shape(shapes, randint(1, 7), 10, 10, 70, 40)
+            if s.end:
+                end = True
+            new_shape = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -147,15 +182,18 @@ if __name__ == '__main__':
         if drop_timer >= 50:
             shapes.update('drop')
             drop_timer = 0
-        if new_shape:
-            s = Shape(shapes, randint(1, 7), 10, 10, 70, 40)
-            new_shape = False
         if s.dt == 0:
             drop_timer = 0
             s.dt = 1
         if s.ns:
             new_shape = True
             s.ns = False
+        if end and not exited:
+            for line in lines_board:
+                if line.count(1) == 9:
+                    lineCount += 1
+            print(lineCount)
+            exited = True
         screen.fill((0, 0, 0))
         board.render(screen)
         shapes.draw(screen)
